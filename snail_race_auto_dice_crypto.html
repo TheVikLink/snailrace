@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Snail Race Auto med terninger</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --panel: #ffffff;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --line: #d1d5db;
+      --accent: #2563eb;
+      --gold: #fbbf24;
+      --trackA: #eef2ff;
+      --trackB: #f8fafc;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
+      color: var(--ink);
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    h1 { margin: 0 0 8px; font-size: 2rem; }
+    .subtitle { color: var(--muted); margin-bottom: 20px; }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+      margin-bottom: 16px;
+    }
+    .controls {
+      display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    }
+    button {
+      border: 0; border-radius: 12px; padding: 12px 16px; cursor: pointer;
+      background: var(--accent); color: white; font-weight: 700; font-size: 1rem;
+    }
+    button.secondary { background: #475569; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .status {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 12px; margin-top: 14px;
+    }
+    .stat {
+      background: #f8fafc; border: 1px solid var(--line); border-radius: 12px; padding: 12px;
+    }
+    .stat .label { color: var(--muted); font-size: 0.92rem; }
+    .stat .value { font-size: 1.5rem; font-weight: 700; margin-top: 4px; }
+    .diceWrap { display: flex; gap: 10px; margin-top: 8px; align-items: center; }
+    .die {
+      width: 58px; height: 58px; border-radius: 14px; border: 1px solid var(--line);
+      background: white; display: flex; align-items: center; justify-content: center;
+      font-size: 2.2rem; box-shadow: 0 6px 16px rgba(0,0,0,0.08); user-select: none;
+    }
+    .die.rolling { animation: diceShake 0.12s linear infinite; }
+    .die.result { box-shadow: 0 0 0 3px rgba(37,99,235,0.18), 0 8px 20px rgba(0,0,0,0.10); }
+    @keyframes diceShake {
+      0% { transform: rotate(0deg) scale(1); }
+      25% { transform: rotate(-5deg) translateY(-1px) scale(1.04); }
+      50% { transform: rotate(4deg) translateY(1px) scale(1.06); }
+      75% { transform: rotate(-4deg) translateY(-1px) scale(1.04); }
+      100% { transform: rotate(0deg) scale(1); }
+    }
+    .board { overflow-x: auto; }
+    .row {
+      display: grid; grid-template-columns: 90px repeat(12, minmax(56px, 1fr));
+      min-width: 780px; align-items: stretch; margin-bottom: 8px; gap: 6px;
+    }
+    .labelCell, .cell {
+      border: 1px solid var(--line); border-radius: 12px; min-height: 58px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--trackB); position: relative; overflow: hidden;
+    }
+    .labelCell { font-weight: 700; background: #f1f5f9; }
+    .row:nth-child(odd) .cell { background: var(--trackA); }
+    .cell.finish { background: #dcfce7; border-color: #86efac; }
+    .snail {
+      font-size: 2rem; transition: transform 0.25s ease;
+      filter: drop-shadow(0 2px 2px rgba(0,0,0,0.12)); user-select: none;
+    }
+    .highlight {
+      animation: pulse 0.7s ease-in-out 2;
+      box-shadow: inset 0 0 0 4px var(--gold), 0 0 18px rgba(251,191,36,0.6);
+      background: linear-gradient(180deg, #fff7cc, #fde68a) !important;
+    }
+    .wiggle .snail { animation: wiggle 0.55s ease-in-out 2; }
+    .winnerRow .labelCell, .winnerRow .cell {
+      border-color: #22c55e; box-shadow: 0 0 0 2px rgba(34,197,94,0.15);
+    }
+    .log { max-height: 240px; overflow: auto; font-size: 0.96rem; line-height: 1.4; padding-right: 4px; }
+    .log p { margin: 0 0 8px; }
+    @keyframes pulse {
+      0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); }
+    }
+    @keyframes wiggle {
+      0% { transform: translateX(0); }
+      20% { transform: translateX(-3px) rotate(-4deg); }
+      40% { transform: translateX(3px) rotate(4deg); }
+      60% { transform: translateX(-2px) rotate(-3deg); }
+      80% { transform: translateX(2px) rotate(3deg); }
+      100% { transform: translateX(0); }
+    }
+    .footerNote { color: var(--muted); font-size: 0.95rem; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>🐌 Snail Race, uten ekstra klikking</h1>
+    <div class="subtitle">Nå med synlige terninger som ruller før riktig snegl får blink og flytter seg frem.</div>
+
+    <div class="panel">
+      <div class="controls">
+        <button id="rollBtn">Kast terninger</button>
+        <button id="autoBtn" class="secondary">Start auto race</button>
+        <button id="resetBtn" class="secondary">Nullstill</button>
+      </div>
+
+      <div class="status">
+        <div class="stat">
+          <div class="label">Terningkast</div>
+          <div class="value" id="diceValue">-</div>
+        </div>
+        <div class="stat">
+          <div class="label">Terninger</div>
+          <div class="diceWrap">
+            <div class="die" id="die1">⚀</div>
+            <div class="die" id="die2">⚀</div>
+          </div>
+        </div>
+        <div class="stat">
+          <div class="label">Aktiv snegl</div>
+          <div class="value" id="snailValue">-</div>
+        </div>
+        <div class="stat">
+          <div class="label">Vinner</div>
+          <div class="value" id="winnerValue">Ingen ennå</div>
+        </div>
+      </div>
+      <div class="footerNote">Regel i denne versjonen: summen av to terninger velger snegl 2 til 12. Tilfeldigheten bruker nettleserens <code>crypto.getRandomValues()</code>.</div>
+    </div>
+
+    <div class="panel board" id="board"></div>
+
+    <div class="panel">
+      <strong>Logg</strong>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+
+  <script>
+    const trackLength = 12;
+    const snailNumbers = Array.from({ length: 11 }, (_, i) => i + 2);
+    const positions = {};
+    let isAnimating = false;
+    let autoMode = false;
+    let winner = null;
+
+    const board = document.getElementById("board");
+    const logEl = document.getElementById("log");
+    const diceValue = document.getElementById("diceValue");
+    const snailValue = document.getElementById("snailValue");
+    const winnerValue = document.getElementById("winnerValue");
+    const die1El = document.getElementById("die1");
+    const die2El = document.getElementById("die2");
+    const rollBtn = document.getElementById("rollBtn");
+    const autoBtn = document.getElementById("autoBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    const dieFaces = { 1: "⚀", 2: "⚁", 3: "⚂", 4: "⚃", 5: "⚄", 6: "⚅" };
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function renderBoard() {
+      board.innerHTML = "";
+      snailNumbers.forEach(n => {
+        const row = document.createElement("div");
+        row.className = "row";
+        row.id = `row-${n}`;
+
+        const label = document.createElement("div");
+        label.className = "labelCell";
+        label.textContent = `Snegl ${n}`;
+        row.appendChild(label);
+
+        for (let c = 0; c < trackLength; c++) {
+          const cell = document.createElement("div");
+          cell.className = "cell" + (c === trackLength - 1 ? " finish" : "");
+          cell.id = `cell-${n}-${c}`;
+
+          if (positions[n] === c) {
+            const snail = document.createElement("div");
+            snail.className = "snail";
+            snail.textContent = "🐌";
+            cell.appendChild(snail);
+          }
+
+          row.appendChild(cell);
+        }
+
+        if (winner === n) row.classList.add("winnerRow");
+        board.appendChild(row);
+      });
+    }
+
+    function log(msg) {
+      const p = document.createElement("p");
+      p.textContent = msg;
+      logEl.prepend(p);
+    }
+
+    function secureRandomInt1to6() {
+      const arr = new Uint32Array(1);
+      crypto.getRandomValues(arr);
+      return (arr[0] % 6) + 1;
+    }
+
+    function rollDice() {
+      const d1 = secureRandomInt1to6();
+      const d2 = secureRandomInt1to6();
+      return { d1, d2, sum: d1 + d2 };
+    }
+
+    async function animateDiceRoll(finalD1, finalD2) {
+      die1El.classList.add("rolling");
+      die2El.classList.add("rolling");
+      die1El.classList.remove("result");
+      die2El.classList.remove("result");
+
+      for (let i = 0; i < 8; i++) {
+        const t1 = secureRandomInt1to6();
+        const t2 = secureRandomInt1to6();
+        die1El.textContent = dieFaces[t1];
+        die2El.textContent = dieFaces[t2];
+        await sleep(90);
+      }
+
+      die1El.classList.remove("rolling");
+      die2El.classList.remove("rolling");
+      die1El.textContent = dieFaces[finalD1];
+      die2El.textContent = dieFaces[finalD2];
+      die1El.classList.add("result");
+      die2El.classList.add("result");
+    }
+
+    async function takeTurn() {
+      if (isAnimating || winner !== null) return;
+
+      isAnimating = true;
+      rollBtn.disabled = true;
+      autoBtn.disabled = true;
+
+      const { d1, d2, sum } = rollDice();
+      await animateDiceRoll(d1, d2);
+
+      diceValue.textContent = `${d1} + ${d2} = ${sum}`;
+      snailValue.textContent = `Snegl ${sum}`;
+
+      const currentCell = document.getElementById(`cell-${sum}-${positions[sum]}`);
+      currentCell.classList.add("highlight", "wiggle");
+      log(`Terningene viste ${d1} og ${d2}. Snegl ${sum} gjør seg klar.`);
+
+      await sleep(900);
+
+      currentCell.classList.remove("highlight", "wiggle");
+
+      if (positions[sum] < trackLength - 1) {
+        positions[sum]++;
+      }
+
+      renderBoard();
+
+      if (positions[sum] === trackLength - 1) {
+        winner = sum;
+        winnerValue.textContent = `Snegl ${sum}`;
+        log(`🎉 Snegl ${sum} vant løpet!`);
+      } else {
+        log(`Snegl ${sum} flyttet til felt ${positions[sum] + 1}.`);
+      }
+
+      isAnimating = false;
+      if (winner === null) {
+        rollBtn.disabled = false;
+        autoBtn.disabled = false;
+      } else {
+        rollBtn.disabled = true;
+        autoBtn.disabled = true;
+      }
+
+      if (autoMode && winner === null) {
+        autoBtn.textContent = "Stopp auto race";
+        await sleep(650);
+        takeTurn();
+      }
+    }
+
+    function resetGame() {
+      snailNumbers.forEach(n => positions[n] = 0);
+      winner = null;
+      autoMode = false;
+      diceValue.textContent = "-";
+      snailValue.textContent = "-";
+      winnerValue.textContent = "Ingen ennå";
+      die1El.textContent = "⚀";
+      die2El.textContent = "⚀";
+      die1El.classList.remove("rolling", "result");
+      die2El.classList.remove("rolling", "result");
+      rollBtn.disabled = false;
+      autoBtn.disabled = false;
+      autoBtn.textContent = "Start auto race";
+      logEl.innerHTML = "";
+      log("Nytt løp startet.");
+      renderBoard();
+    }
+
+    rollBtn.addEventListener("click", takeTurn);
+
+    autoBtn.addEventListener("click", async () => {
+      if (winner !== null) return;
+      autoMode = !autoMode;
+      autoBtn.textContent = autoMode ? "Stopp auto race" : "Start auto race";
+      if (autoMode && !isAnimating) {
+        takeTurn();
+      }
+    });
+
+    resetBtn.addEventListener("click", resetGame);
+    resetGame();
+  </script>
+</body>
+</html>
