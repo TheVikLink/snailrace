@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Snail Race Auto med terninger</title>
+  <title>Snail Race med terningoversikt</title>
   <style>
     :root {
       --bg: #f6f7fb;
@@ -15,17 +15,37 @@
       --gold: #fbbf24;
       --trackA: #eef2ff;
       --trackB: #f8fafc;
+      --win: #16a34a;
+      --diceBorder: #e11d48;
+      --pip: #2563eb;
     }
+
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: Arial, Helvetica, sans-serif;
       background: linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
       color: var(--ink);
     }
-    .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
-    h1 { margin: 0 0 8px; font-size: 2rem; }
-    .subtitle { color: var(--muted); margin-bottom: 20px; }
+
+    .wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 2rem;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin-bottom: 18px;
+      line-height: 1.45;
+    }
+
     .panel {
       background: var(--panel);
       border: 1px solid var(--line);
@@ -34,33 +54,78 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.06);
       margin-bottom: 16px;
     }
+
     .controls {
-      display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
     }
+
     button {
-      border: 0; border-radius: 12px; padding: 12px 16px; cursor: pointer;
-      background: var(--accent); color: white; font-weight: 700; font-size: 1rem;
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      background: var(--accent);
+      color: white;
+      font-weight: 700;
+      font-size: 1rem;
     }
+
     button.secondary { background: #475569; }
     button:disabled { opacity: 0.6; cursor: not-allowed; }
+
     .status {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-      gap: 12px; margin-top: 14px;
+      gap: 12px;
+      margin-top: 14px;
     }
+
     .stat {
-      background: #f8fafc; border: 1px solid var(--line); border-radius: 12px; padding: 12px;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
     }
-    .stat .label { color: var(--muted); font-size: 0.92rem; }
-    .stat .value { font-size: 1.5rem; font-weight: 700; margin-top: 4px; }
-    .diceWrap { display: flex; gap: 10px; margin-top: 8px; align-items: center; }
+
+    .stat .label {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .stat .value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    .diceWrap {
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+      align-items: center;
+    }
+
     .die {
-      width: 58px; height: 58px; border-radius: 14px; border: 1px solid var(--line);
-      background: white; display: flex; align-items: center; justify-content: center;
-      font-size: 2.2rem; box-shadow: 0 6px 16px rgba(0,0,0,0.08); user-select: none;
+      width: 58px;
+      height: 58px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+      user-select: none;
     }
-    .die.rolling { animation: diceShake 0.12s linear infinite; }
-    .die.result { box-shadow: 0 0 0 3px rgba(37,99,235,0.18), 0 8px 20px rgba(0,0,0,0.10); }
+
+    .die.rolling {
+      animation: diceShake 0.12s linear infinite;
+    }
+
     @keyframes diceShake {
       0% { transform: rotate(0deg) scale(1); }
       25% { transform: rotate(-5deg) translateY(-1px) scale(1.04); }
@@ -68,37 +133,70 @@
       75% { transform: rotate(-4deg) translateY(-1px) scale(1.04); }
       100% { transform: rotate(0deg) scale(1); }
     }
+
     .board { overflow-x: auto; }
+
     .row {
-      display: grid; grid-template-columns: 90px repeat(12, minmax(56px, 1fr));
-      min-width: 780px; align-items: stretch; margin-bottom: 8px; gap: 6px;
+      display: grid;
+      grid-template-columns: 90px repeat(12, minmax(56px, 1fr));
+      min-width: 780px;
+      align-items: stretch;
+      margin-bottom: 8px;
+      gap: 6px;
     }
+
     .labelCell, .cell {
-      border: 1px solid var(--line); border-radius: 12px; min-height: 58px;
-      display: flex; align-items: center; justify-content: center;
-      background: var(--trackB); position: relative; overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      min-height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--trackB);
+      position: relative;
+      overflow: hidden;
     }
-    .labelCell { font-weight: 700; background: #f1f5f9; }
+
+    .labelCell {
+      font-weight: 700;
+      background: #f1f5f9;
+    }
+
     .row:nth-child(odd) .cell { background: var(--trackA); }
-    .cell.finish { background: #dcfce7; border-color: #86efac; }
-    .snail {
-      font-size: 2rem; transition: transform 0.25s ease;
-      filter: drop-shadow(0 2px 2px rgba(0,0,0,0.12)); user-select: none;
+    .cell.finish {
+      background: #dcfce7;
+      border-color: #86efac;
     }
+
+    .snail {
+      font-size: 2rem;
+      transition: transform 0.25s ease;
+      filter: drop-shadow(0 2px 2px rgba(0,0,0,0.12));
+      user-select: none;
+    }
+
     .highlight {
       animation: pulse 0.7s ease-in-out 2;
       box-shadow: inset 0 0 0 4px var(--gold), 0 0 18px rgba(251,191,36,0.6);
       background: linear-gradient(180deg, #fff7cc, #fde68a) !important;
     }
-    .wiggle .snail { animation: wiggle 0.55s ease-in-out 2; }
-    .winnerRow .labelCell, .winnerRow .cell {
-      border-color: #22c55e; box-shadow: 0 0 0 2px rgba(34,197,94,0.15);
+
+    .wiggle .snail {
+      animation: wiggle 0.55s ease-in-out 2;
     }
-    .log { max-height: 240px; overflow: auto; font-size: 0.96rem; line-height: 1.4; padding-right: 4px; }
-    .log p { margin: 0 0 8px; }
+
+    .winnerRow .labelCell,
+    .winnerRow .cell {
+      border-color: #22c55e;
+      box-shadow: 0 0 0 2px rgba(34,197,94,0.15);
+    }
+
     @keyframes pulse {
-      0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); }
+      0% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+      100% { transform: scale(1); }
     }
+
     @keyframes wiggle {
       0% { transform: translateX(0); }
       20% { transform: translateX(-3px) rotate(-4deg); }
@@ -107,13 +205,138 @@
       80% { transform: translateX(2px) rotate(3deg); }
       100% { transform: translateX(0); }
     }
-    .footerNote { color: var(--muted); font-size: 0.95rem; margin-top: 10px; }
+
+    .log {
+      max-height: 240px;
+      overflow: auto;
+      font-size: 0.96rem;
+      line-height: 1.4;
+      padding-right: 4px;
+    }
+
+    .log p { margin: 0 0 8px; }
+
+    .footerNote {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-top: 10px;
+      line-height: 1.45;
+    }
+
+    .chartTitle {
+      margin: 0 0 8px;
+      font-size: 1.45rem;
+    }
+
+    .chartIntro {
+      color: var(--muted);
+      line-height: 1.45;
+      margin-bottom: 14px;
+    }
+
+    .diceChartWrap {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow-x: auto;
+      background: #fff;
+    }
+
+    .diceChart {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 950px;
+    }
+
+    .diceChart thead th {
+      text-align: left;
+      background: #f8fafc;
+      border-bottom: 2px solid #cfd8e3;
+      padding: 12px 14px;
+      font-size: 1rem;
+    }
+
+    .diceChart tbody tr {
+      border-bottom: 2px solid #d7dee8;
+    }
+
+    .diceChart tbody tr:nth-child(even) {
+      background: #fbfcfe;
+    }
+
+    .diceChart td {
+      padding: 12px 14px;
+      vertical-align: middle;
+    }
+
+    .sumCol {
+      width: 80px;
+      text-align: center;
+      font-size: 1.25rem;
+      font-weight: 800;
+    }
+
+    .probCol {
+      width: 110px;
+      text-align: center;
+      font-size: 1.05rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .combosCol {
+      min-width: 600px;
+    }
+
+    .comboStrip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .pairBox {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+    }
+
+    .miniDie {
+      position: relative;
+      width: 36px;
+      height: 36px;
+      background: white;
+      border: 2px solid var(--diceBorder);
+      border-radius: 8px;
+      flex: 0 0 auto;
+    }
+
+    .miniPip {
+      position: absolute;
+      width: 7px;
+      height: 7px;
+      background: white;
+      border: 2px solid var(--pip);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 2px rgba(37,99,235,0.3);
+    }
+
+    .waysNote {
+      color: var(--muted);
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-top: 8px;
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <h1>🐌 Snail Race, uten ekstra klikking</h1>
-    <div class="subtitle">Nå med synlige terninger som ruller før riktig snegl får blink og flytter seg frem.</div>
+    <div class="subtitle">Kast terningene, se dem rulle, og la riktig snegl blinke før den flytter automatisk. Under løpet ligger en læringsoversikt som viser alle måtene å få summene 2 til 12 på.</div>
 
     <div class="panel">
       <div class="controls">
@@ -143,7 +366,7 @@
           <div class="value" id="winnerValue">Ingen ennå</div>
         </div>
       </div>
-      <div class="footerNote">Regel i denne versjonen: summen av to terninger velger snegl 2 til 12. Tilfeldigheten bruker nettleserens <code>crypto.getRandomValues()</code>.</div>
+      <div class="footerNote">Regel i denne versjonen: summen av to terninger velger snegl 2 til 12.</div>
     </div>
 
     <div class="panel board" id="board"></div>
@@ -151,6 +374,26 @@
     <div class="panel">
       <strong>Logg</strong>
       <div class="log" id="log"></div>
+    </div>
+
+    <div class="panel">
+      <h2 class="chartTitle">🎲 Alle terningkombinasjonene, visuelt</h2>
+      <div class="chartIntro">
+        Her er én rad for hver sum fra 2 til 12. På hver rad vises <strong>alle terningparene visuelt</strong> som gir akkurat den summen, med tydelig skillelinje mellom radene og sannsynligheten ute til høyre.
+      </div>
+
+      <div class="diceChartWrap">
+        <table class="diceChart">
+          <thead>
+            <tr>
+              <th>Sum</th>
+              <th>Ulike terningkombinasjoner</th>
+              <th>Sannsynlighet</th>
+            </tr>
+          </thead>
+          <tbody id="learningBody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -172,11 +415,88 @@
     const rollBtn = document.getElementById("rollBtn");
     const autoBtn = document.getElementById("autoBtn");
     const resetBtn = document.getElementById("resetBtn");
+    const learningBody = document.getElementById("learningBody");
 
-    const dieFaces = { 1: "⚀", 2: "⚁", 3: "⚂", 4: "⚃", 5: "⚄", 6: "⚅" };
+    const dieFaces = {
+      1: "⚀", 2: "⚁", 3: "⚂", 4: "⚃", 5: "⚄", 6: "⚅"
+    };
+
+    const pipMap = {
+      1: [[50, 50]],
+      2: [[25, 25], [75, 75]],
+      3: [[25, 25], [50, 50], [75, 75]],
+      4: [[25, 25], [75, 25], [25, 75], [75, 75]],
+      5: [[25, 25], [75, 25], [50, 50], [25, 75], [75, 75]],
+      6: [[25, 20], [25, 50], [25, 80], [75, 20], [75, 50], [75, 80]]
+    };
 
     function sleep(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function createMiniDie(value) {
+      const die = document.createElement("div");
+      die.className = "miniDie";
+      pipMap[value].forEach(([x, y]) => {
+        const pip = document.createElement("div");
+        pip.className = "miniPip";
+        pip.style.left = x + "%";
+        pip.style.top = y + "%";
+        die.appendChild(pip);
+      });
+      return die;
+    }
+
+    function getCombosForSum(sum) {
+      const combos = [];
+      for (let d1 = 1; d1 <= 6; d1++) {
+        for (let d2 = 1; d2 <= 6; d2++) {
+          if (d1 + d2 === sum) combos.push([d1, d2]);
+        }
+      }
+      return combos;
+    }
+
+    function renderLearningTable() {
+      learningBody.innerHTML = "";
+      for (let sum = 2; sum <= 12; sum++) {
+        const combos = getCombosForSum(sum);
+        const tr = document.createElement("tr");
+
+        const tdSum = document.createElement("td");
+        tdSum.className = "sumCol";
+        tdSum.textContent = sum;
+
+        const tdCombos = document.createElement("td");
+        tdCombos.className = "combosCol";
+
+        const strip = document.createElement("div");
+        strip.className = "comboStrip";
+
+        combos.forEach(([d1, d2]) => {
+          const pairBox = document.createElement("div");
+          pairBox.className = "pairBox";
+          pairBox.appendChild(createMiniDie(d1));
+          pairBox.appendChild(createMiniDie(d2));
+          strip.appendChild(pairBox);
+        });
+
+        const note = document.createElement("div");
+        note.className = "waysNote";
+        note.textContent = `${combos.length} måter å få ${sum} på`;
+
+        tdCombos.appendChild(strip);
+        tdCombos.appendChild(note);
+
+        const tdProb = document.createElement("td");
+        tdProb.className = "probCol";
+        tdProb.textContent = `${combos.length}/36`;
+
+        tr.appendChild(tdSum);
+        tr.appendChild(tdCombos);
+        tr.appendChild(tdProb);
+        learningBody.appendChild(tr);
+      }
     }
 
     function renderBoard() {
@@ -217,27 +537,19 @@
       logEl.prepend(p);
     }
 
-    function secureRandomInt1to6() {
-      const arr = new Uint32Array(1);
-      crypto.getRandomValues(arr);
-      return (arr[0] % 6) + 1;
-    }
-
     function rollDice() {
-      const d1 = secureRandomInt1to6();
-      const d2 = secureRandomInt1to6();
+      const d1 = Math.floor(Math.random() * 6) + 1;
+      const d2 = Math.floor(Math.random() * 6) + 1;
       return { d1, d2, sum: d1 + d2 };
     }
 
     async function animateDiceRoll(finalD1, finalD2) {
       die1El.classList.add("rolling");
       die2El.classList.add("rolling");
-      die1El.classList.remove("result");
-      die2El.classList.remove("result");
 
       for (let i = 0; i < 8; i++) {
-        const t1 = secureRandomInt1to6();
-        const t2 = secureRandomInt1to6();
+        const t1 = Math.floor(Math.random() * 6) + 1;
+        const t2 = Math.floor(Math.random() * 6) + 1;
         die1El.textContent = dieFaces[t1];
         die2El.textContent = dieFaces[t2];
         await sleep(90);
@@ -247,8 +559,6 @@
       die2El.classList.remove("rolling");
       die1El.textContent = dieFaces[finalD1];
       die2El.textContent = dieFaces[finalD2];
-      die1El.classList.add("result");
-      die2El.classList.add("result");
     }
 
     async function takeTurn() {
@@ -296,7 +606,6 @@
       }
 
       if (autoMode && winner === null) {
-        autoBtn.textContent = "Stopp auto race";
         await sleep(650);
         takeTurn();
       }
@@ -311,8 +620,6 @@
       winnerValue.textContent = "Ingen ennå";
       die1El.textContent = "⚀";
       die2El.textContent = "⚀";
-      die1El.classList.remove("rolling", "result");
-      die2El.classList.remove("rolling", "result");
       rollBtn.disabled = false;
       autoBtn.disabled = false;
       autoBtn.textContent = "Start auto race";
@@ -327,12 +634,12 @@
       if (winner !== null) return;
       autoMode = !autoMode;
       autoBtn.textContent = autoMode ? "Stopp auto race" : "Start auto race";
-      if (autoMode && !isAnimating) {
-        takeTurn();
-      }
+      if (autoMode && !isAnimating) takeTurn();
     });
 
     resetBtn.addEventListener("click", resetGame);
+
+    renderLearningTable();
     resetGame();
   </script>
 </body>
